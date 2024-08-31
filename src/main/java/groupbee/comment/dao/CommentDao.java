@@ -1,18 +1,18 @@
 package groupbee.comment.dao;
 
+import groupbee.comment.entity.BoardEntity;
 import groupbee.comment.entity.CommentEntity;
 import groupbee.comment.repository.CommemtRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Repository;
 
-import javax.xml.stream.events.Comment;
 import java.util.List;
 
 @Repository
 @AllArgsConstructor
 public class CommentDao {
-
     private CommemtRepository repository;
+
     //작성
     public void save(CommentEntity commentEntity) {
         repository.save(commentEntity);
@@ -22,14 +22,11 @@ public class CommentDao {
         return repository.findByBoardId(boardId);
     }
 
-    // 댓글 수정
-    public void update(CommentEntity commentEntity) {
-        repository.save(commentEntity);
+    public boolean existsById(Long id) {
+        return repository.existsById(id);
     }
 
-    // 댓글 삭제
-    public void delete(Long id) {
+    public void deleteById(Long id) {
         repository.deleteById(id);
     }
-
 }

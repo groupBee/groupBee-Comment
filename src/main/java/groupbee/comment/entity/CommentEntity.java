@@ -1,11 +1,14 @@
 package groupbee.comment.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Builder
 @AllArgsConstructor
@@ -16,33 +19,29 @@ import java.time.LocalDate;
 @Entity
 @Table(name = "comment")
 public class CommentEntity {
-
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "comment_id_gen")
-    @SequenceGenerator(name = "comment_id_gen", sequenceName = "comment_num_seq", allocationSize = 1)
-    @Column(name = "idx", nullable = false)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", nullable = false)
     private Long id;
 
-    @NotNull
-    @Column(name = "board_id", nullable = false)
-    private Long boardId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "board_id", nullable = false) // 외래 키를 설정하는 올바른 방법
+    @JsonBackReference
+    private BoardEntity board; // BoardEntity 타입으로 설정
 
-    @Size(max = 255)
-    @NotNull
     @Column(name = "member_id", nullable = false)
     private String memberId;
 
     @NotNull
+    @CreationTimestamp
     @Column(name = "create_date", nullable = false)
-    private LocalDate createDate;
+    private LocalDateTime createDate;
 
-    @NotNull
     @Column(name = "update_date", nullable = false)
-    private LocalDate updateDate;
+    private LocalDateTime updateDate;
 
     @Size(max = 255)
     @NotNull
     @Column(name = "content", nullable = false)
     private String content;
-
 }

@@ -1,12 +1,17 @@
 package groupbee.comment.entity;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Builder
 @AllArgsConstructor
@@ -17,25 +22,23 @@ import java.time.LocalDate;
 @Entity
 @Table(name = "board")
 public class BoardEntity {
-
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "board_id_gen")
-    @SequenceGenerator(name = "board_id_gen", sequenceName = "board_num_seq", allocationSize = 1)
-    @Column(name = "idx", nullable = false)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", nullable = false)
     private Long id;
 
     @NotNull
+    @CreationTimestamp
     @Column(name = "create_date", nullable = false, updatable = false)
-    private LocalDate createDate;
+    private LocalDateTime createDate;
 
     @NotNull
     @ColumnDefault("0")
     @Column(name = "read_count", nullable = false)
     private Long readCount;
 
-    @NotNull
     @Column(name = "update_date", nullable = false)
-    private LocalDate updateDate;
+    private LocalDateTime updateDate;
 
     @NotNull
     @Column(name = "content", nullable = false, length = Integer.MAX_VALUE)
@@ -45,14 +48,12 @@ public class BoardEntity {
     @Column(name = "file")
     private String file;
 
-    @Size(max = 255)
-    @NotNull
     @Column(name = "member_id", nullable = false)
     private String memberId;
 
     @Size(max = 255)
-    @Column(name = "original_file")
-    private String originalFile;
+    @Column(name = "original_file_name")
+    private String originalFileName;
 
     @Size(max = 255)
     @NotNull
@@ -65,4 +66,7 @@ public class BoardEntity {
     @Column(name = "must_must_read")
     private Boolean mustMustRead;
 
+    @OneToMany(mappedBy = "board", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
+    private List<CommentEntity> comments = new ArrayList<>();
 }

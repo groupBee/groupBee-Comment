@@ -9,8 +9,8 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 @SpringBootApplication
 @EnableFeignClients
-@EntityScan(basePackages = "groupbee.comment.entity")
-@EnableJpaRepositories("groupbee.comment.repository")
+//@EntityScan(basePackages = "groupbee.comment.entity")
+//@EnableJpaRepositories("groupbee.comment.repository")
 public class CommentApplication {
 
     public static void main(String[] args) {
