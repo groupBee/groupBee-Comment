@@ -1,5 +1,6 @@
 package groupbee.comment.entity;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -65,6 +66,7 @@ public class BoardEntity {
     @Column(name = "must_must_read")
     private Boolean mustMustRead;
 
-    @OneToMany(mappedBy = "boardId", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "board", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
     private List<CommentEntity> comments = new ArrayList<>();
 }

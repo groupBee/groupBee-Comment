@@ -5,6 +5,7 @@ import groupbee.comment.dao.CommentDao;
 import groupbee.comment.dto.CommentDto;
 import groupbee.comment.entity.BoardEntity;
 import groupbee.comment.entity.CommentEntity;
+import groupbee.comment.repository.BoardRepository;
 import groupbee.comment.service.feign.FeignClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,14 +23,20 @@ import java.util.Map;
 public class CommentService {
     private final CommentDao commentDao;
     private final FeignClient feignClient;
+    private final BoardRepository boardRepository;
 
     public void save(CommentDto commentDto){
         try {
+            BoardEntity boardEntity = boardRepository.findById(commentDto.getBoardId())
+                    .orElseThrow(() -> new RuntimeException("Board not found"));
+
             CommentEntity commentEntity = new CommentEntity();
-            Map<String, Object> response = feignClient.getUserInfo();
-            commentEntity.setMemberId((String) response.get("potalId"));
-            commentEntity.setUpdateDate(LocalDateTime.now());
-            commentEntity.setContent(commentDto.getContent());
+
+            Map<String, Object> response = feignClient.getUserInfo(); // feign 을 통해 UserInfo 가져오기
+            commentEntity.setMemberId((String) response.get("potalId")); // UserInfo 에서 potalId 가져오기
+            commentEntity.setUpdateDate(LocalDateTime.now()); // 업데이트 시간 설정
+            commentEntity.setContent(commentDto.getContent()); // 댓글 내용 설정
+            commentEntity.setBoard(boardEntity); // 게시글 ID 설정
 
             commentDao.save(commentEntity);
             ResponseEntity.ok().build();
@@ -49,18 +56,16 @@ public class CommentService {
     }
 
     // 특정 게시글의 댓글 조회
-    public List<CommentEntity> findByBoardId(BoardEntity boardId) {
+    public List<CommentEntity> findByBoardId(Long boardId) {
         return commentDao.findByBoardId(boardId);
     }
-
-    //수정
-    public void update(CommentEntity commentEntity){
-        commentDao.update(commentEntity);
-    }
-
     //삭제
-    public void delete(Long id){
-        commentDao.delete(id);
+    public boolean delete(Long id){
+        if (commentDao.existsById(id)) {
+            commentDao.deleteById(id);
+            return true;
+        } else {
+            return false;
+        }
     }
-
 }

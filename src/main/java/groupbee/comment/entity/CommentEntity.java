@@ -1,5 +1,6 @@
 package groupbee.comment.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -25,7 +26,8 @@ public class CommentEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "board_id", nullable = false) // 외래 키를 설정하는 올바른 방법
-    private BoardEntity boardId; // BoardEntity 타입으로 설정
+    @JsonBackReference
+    private BoardEntity board; // BoardEntity 타입으로 설정
 
     @Column(name = "member_id", nullable = false)
     private String memberId;

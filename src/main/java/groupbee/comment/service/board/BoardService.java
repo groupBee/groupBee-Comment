@@ -95,7 +95,10 @@ public class BoardService {
         try {
             Optional<BoardEntity> optionalBoard = boardDao.findById(id);
             if (optionalBoard.isPresent()) {
-                return ResponseEntity.status(HttpStatus.OK).body(optionalBoard.get());
+                BoardEntity boardEntity = optionalBoard.get();
+                boardEntity.setReadCount(optionalBoard.get().getReadCount() + 1); // 조회수 증가
+                boardDao.save(boardEntity);
+                return ResponseEntity.status(HttpStatus.OK).body(boardEntity);
             } else {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
             }

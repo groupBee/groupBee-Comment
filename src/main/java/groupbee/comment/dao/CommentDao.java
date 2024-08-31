@@ -18,15 +18,15 @@ public class CommentDao {
         repository.save(commentEntity);
     }
     // 특정 게시글의 댓글 조회
-    public List<CommentEntity> findByBoardId(BoardEntity boardId) {
+    public List<CommentEntity> findByBoardId(Long boardId) {
         return repository.findByBoardId(boardId);
     }
-    // 댓글 수정
-    public void update(CommentEntity commentEntity) {
-        repository.save(commentEntity);
+
+    public boolean existsById(Long id) {
+        return repository.existsById(id);
     }
-    // 댓글 삭제
-    public void delete(Long id) {
+
+    public void deleteById(Long id) {
         repository.deleteById(id);
     }
 }

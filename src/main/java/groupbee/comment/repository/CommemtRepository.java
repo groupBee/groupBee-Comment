@@ -8,6 +8,6 @@ import java.util.List;
 
 public interface CommemtRepository extends JpaRepository <CommentEntity,Long> {
     // 특정 게시글의 댓글 조회
-    List<CommentEntity> findByBoardId(BoardEntity boardId);
+    List<CommentEntity> findByBoardId(Long boardId);
 
 }
