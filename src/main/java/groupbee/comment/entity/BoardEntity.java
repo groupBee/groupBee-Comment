@@ -66,6 +66,9 @@ public class BoardEntity {
     @Column(name = "must_must_read")
     private Boolean mustMustRead;
 
+    @Column(name = "writer")
+    private String writer;
+
     @OneToMany(mappedBy = "board", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
     private List<CommentEntity> comments = new ArrayList<>();

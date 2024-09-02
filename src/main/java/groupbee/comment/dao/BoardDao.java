@@ -1,5 +1,6 @@
 package groupbee.comment.dao;
 
+import groupbee.comment.dto.BoardDto;
 import groupbee.comment.entity.BoardEntity;
 import groupbee.comment.repository.BoardRepository;
 import lombok.AllArgsConstructor;
@@ -35,5 +36,9 @@ public class BoardDao {
     // 글 삭제
     public void deleteById(Long id) {
         repository.deleteById(id);
+    }
+
+    public List<BoardDto> findAllByIdWithCommentCount() {
+        return repository.findAllByIdWithCommentCount();
     }
 }

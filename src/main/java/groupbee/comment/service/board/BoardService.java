@@ -3,21 +3,17 @@ package groupbee.comment.service.board;
 
 import feign.FeignException;
 import groupbee.comment.dao.BoardDao;
+import groupbee.comment.dto.BoardDto;
 import groupbee.comment.entity.BoardEntity;
 import groupbee.comment.repository.BoardRepository;
 import groupbee.comment.service.feign.FeignClient;
 import groupbee.comment.service.minio.MinioService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.cglib.core.Local;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.FileNotFoundException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -37,8 +33,6 @@ public class BoardService {
             if (file != null && !file.isEmpty()) {
                 String originalFileName = file.getOriginalFilename();
                 String fileName = minioService.uploadFile("groupbee", "board", file);
-
-                // 파일 이름 설정만으로 충분함 (경로 검사 제거)
                 boardEntity.setFile(fileName);
                 boardEntity.setOriginalFileName(originalFileName);
             }
@@ -46,8 +40,10 @@ public class BoardService {
             // 사용자 정보 가져오기
             Map<String, Object> response = feignClient.getUserInfo();
             String potalId = (String) response.get("potalId");
+            String writer = (String) response.get("name");
 
             boardEntity.setMemberId(potalId);
+            boardEntity.setWriter(writer);
             boardEntity.setUpdateDate(LocalDateTime.now());
 
             // 엔티티 저장
@@ -72,9 +68,9 @@ public class BoardService {
     }
 
     //전체글
-    public ResponseEntity<List<BoardEntity>> findAll() {
+    public ResponseEntity<List<BoardDto>> findBoardByIdWithCommentCount() {
         try {
-            return ResponseEntity.ok(boardDao.findAll());
+            return ResponseEntity.ok(boardDao.findAllByIdWithCommentCount());
         } catch (FeignException.BadRequest e) {
             // 400 Bad Request 발생 시 처리
             System.out.println("Bad Request: " + e.getMessage());
@@ -147,9 +143,10 @@ public class BoardService {
             entity.setMustMustRead(entity.getMustMustRead() != null ? entity.getMustMustRead() : boardEntity.getMustMustRead());
             entity.setCreateDate(boardEntity.getCreateDate());
             entity.setMemberId(boardEntity.getMemberId());
+            entity.setWriter(boardEntity.getWriter());
             entity.setReadCount(boardEntity.getReadCount());
 
-            BoardEntity updateEntity = boardDao.save(entity);
+            BoardEntity updateEntity = boardDao.update(entity);
             return ResponseEntity.status(HttpStatus.OK).body(updateEntity);
         } catch (FeignException.BadRequest e) {
             // 400 Bad Request 발생 시 처리
@@ -169,10 +166,11 @@ public class BoardService {
 
     //글 삭제
     public boolean deleteById(Long id) {
-        if (boardDao.findById(id).isPresent()) {
-            Optional<BoardEntity> entity = boardDao.findById(id);
-            if (entity.get().getFile() != null) {
-                minioService.deleteFile("groupbee", "board", entity.get().getFile());
+        Optional<BoardEntity> entity = boardDao.findById(id);
+        if (entity.isPresent()) {
+            BoardEntity boardEntity = entity.get();
+            if (boardEntity.getFile() != null) {
+                minioService.deleteFile("groupbee", "board", boardEntity.getFile());
             }
             boardDao.deleteById(id);
             return true;

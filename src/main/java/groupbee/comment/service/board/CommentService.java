@@ -34,6 +34,7 @@ public class CommentService {
 
             Map<String, Object> response = feignClient.getUserInfo(); // feign 을 통해 UserInfo 가져오기
             commentEntity.setMemberId((String) response.get("potalId")); // UserInfo 에서 potalId 가져오기
+            commentEntity.setWriter((String) response.get("name")); // UserInfo 에서 name 가져오기
             commentEntity.setUpdateDate(LocalDateTime.now()); // 업데이트 시간 설정
             commentEntity.setContent(commentDto.getContent()); // 댓글 내용 설정
             commentEntity.setBoard(boardEntity); // 게시글 ID 설정

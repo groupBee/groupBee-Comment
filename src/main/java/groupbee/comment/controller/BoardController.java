@@ -2,6 +2,7 @@ package groupbee.comment.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import groupbee.comment.dto.BoardDto;
 import groupbee.comment.entity.BoardEntity;
 import groupbee.comment.service.board.BoardService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -44,11 +45,36 @@ public class BoardController {
 
     // 전체 게시물 조회
     @Operation(
-            summary = "전체 게시물 조회"
+            summary = "전체 게시물 조회",
+            description = "\"board\": {\n" +
+                    "            \"id\": 65,\n" +
+                    "            \"createDate\": \"2024-08-31T17:28:26.159986\",\n" +
+                    "            \"readCount\": 110,\n" +
+                    "            \"updateDate\": \"2024-09-01T00:45:49.199314\",\n" +
+                    "            \"content\": \"\\b여자친구 이니셜은 \\\"S\\\"\",\n" +
+                    "            \"file\": null,\n" +
+                    "            \"memberId\": \"tlsdhks543\",\n" +
+                    "            \"originalFileName\": null,\n" +
+                    "            \"title\": \"\\b박보민 사실 여자친구가 있는것으로 밝혀져 ...\",\n" +
+                    "            \"mustRead\": true,\n" +
+                    "            \"mustMustRead\": true,\n" +
+                    "            \"writer\": \"신완철\",\n" +
+                    "            \"comments\": [\n" +
+                    "                {\n" +
+                    "                    \"id\": 42,\n" +
+                    "                    \"memberId\": \"jeenukchung\",\n" +
+                    "                    \"createDate\": \"2024-09-01T04:35:25.865824\",\n" +
+                    "                    \"updateDate\": \"2024-09-01T04:35:25.85703\",\n" +
+                    "                    \"content\": \"ㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋ\",\n" +
+                    "                    \"writer\": \"정진욱\"\n" +
+                    "                }\n" +
+                    "            ]\n" +
+                    "        },\n" +
+                    "        \"commentCount\": 1"
     )
     @GetMapping("/list")
-    public ResponseEntity<List<BoardEntity>> list() {
-        return  boardService.findAll();
+    public ResponseEntity<List<BoardDto>> getBoardByIdWithCommentCount() {
+        return boardService.findBoardByIdWithCommentCount();
     }
 
     @Operation(

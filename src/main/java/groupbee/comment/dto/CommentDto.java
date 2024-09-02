@@ -17,4 +17,5 @@ public class CommentDto {
     private LocalDateTime updateDate;
     private String memberId;
     private Long boardId;
+    private String writer;
 }
