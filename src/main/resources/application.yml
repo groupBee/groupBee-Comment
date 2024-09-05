@@ -23,6 +23,8 @@ spring:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     properties:
       hibernate:
+        jdbc:
+          timezone: Asia/Seoul
         format_sql: true
 
 springdoc:
