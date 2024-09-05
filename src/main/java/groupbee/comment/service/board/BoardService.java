@@ -1,11 +1,9 @@
 package groupbee.comment.service.board;
 
-
 import feign.FeignException;
 import groupbee.comment.dao.BoardDao;
 import groupbee.comment.dto.BoardDto;
 import groupbee.comment.entity.BoardEntity;
-import groupbee.comment.repository.BoardRepository;
 import groupbee.comment.service.feign.FeignClient;
 import groupbee.comment.service.minio.MinioService;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -22,19 +21,29 @@ import java.util.Optional;
 @RequiredArgsConstructor
 @Service
 public class BoardService {
-    private final BoardRepository boardRepository;
     private final BoardDao boardDao;
     private final FeignClient feignClient;
     private final MinioService minioService;
 
-    //글 작성
-    public ResponseEntity<BoardEntity> save(BoardEntity boardEntity, MultipartFile file) {
+    // 글 작성
+    public ResponseEntity<BoardEntity> save(BoardEntity boardEntity, List<MultipartFile> files) {
         try {
-            if (file != null && !file.isEmpty()) {
-                String originalFileName = file.getOriginalFilename();
-                String fileName = minioService.uploadFile("groupbee", "board", file);
-                boardEntity.setFile(fileName);
-                boardEntity.setOriginalFileName(originalFileName);
+            // 파일 리스트 처리
+            if (files != null && !files.isEmpty()) {
+                List<String> originalFileNames = new ArrayList<>();
+                List<String> fileNames = new ArrayList<>();
+
+                // 각 파일 업로드 및 파일명 저장
+                for (MultipartFile file : files) {
+                    String originalFileName = file.getOriginalFilename();
+                    String fileName = minioService.uploadFile("groupbee", "board", file);
+
+                    originalFileNames.add(originalFileName);
+                    fileNames.add(fileName);
+                }
+
+                boardEntity.setOriginalFileNames(originalFileNames);
+                boardEntity.setFiles(fileNames);
             }
 
             // 사용자 정보 가져오기
@@ -67,32 +76,13 @@ public class BoardService {
         }
     }
 
-    //전체글
-    public ResponseEntity<List<BoardDto>> findBoardByIdWithCommentCount() {
-        try {
-            return ResponseEntity.ok(boardDao.findAllByIdWithCommentCount());
-        } catch (FeignException.BadRequest e) {
-            // 400 Bad Request 발생 시 처리
-            System.out.println("Bad Request: " + e.getMessage());
-            return ResponseEntity.badRequest().build();
-        } catch (FeignException e) {
-            // 기타 FeignException 발생 시 처리
-            System.out.println("Feign Exception: " + e.getMessage());
-            return ResponseEntity.status(e.status()).build();
-        } catch (Exception e) {
-            // 일반 예외 처리
-            System.out.println("Exception: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
-    }
-
-    //게시물 상세 조회
+    // 게시물 상세 조회
     public ResponseEntity<BoardEntity> findById(Long id) {
         try {
             Optional<BoardEntity> optionalBoard = boardDao.findById(id);
             if (optionalBoard.isPresent()) {
                 BoardEntity boardEntity = optionalBoard.get();
-                boardEntity.setReadCount(optionalBoard.get().getReadCount() + 1); // 조회수 증가
+                boardEntity.setReadCount(boardEntity.getReadCount() + 1); // 조회수 증가
                 boardDao.save(boardEntity);
                 return ResponseEntity.status(HttpStatus.OK).body(boardEntity);
             } else {
@@ -113,28 +103,40 @@ public class BoardService {
         }
     }
 
-    //글 수정
-    public ResponseEntity<BoardEntity> update(Long id, BoardEntity entity, MultipartFile file) {
+    // 글 수정
+    public ResponseEntity<BoardEntity> update(Long id, BoardEntity entity, List<MultipartFile> files) {
         try {
-            BoardEntity boardEntity = boardRepository.findById(id)
+            BoardEntity boardEntity = boardDao.findById(id)
                     .orElseThrow(() -> new RuntimeException("Board not found"));
 
             entity.setId(id);
-            if (file != null && !file.isEmpty()) {
-                String originalFileName = file.getOriginalFilename();
+            if (files != null && !files.isEmpty()) {
+                List<String> originalFileNames = new ArrayList<>();
+                List<String> fileNames = new ArrayList<>();
+
                 // 기존 파일 삭제
-                if (boardEntity.getFile() != null) {
-                    minioService.deleteFile("groupbee", "board", boardEntity.getFile());
+                if (boardEntity.getFiles() != null) {
+                    for (String fileName : boardEntity.getFiles()) {
+                        minioService.deleteFile("groupbee", "board", fileName);
+                    }
                 }
+
                 // 새 파일 업로드
-                String fileName = minioService.uploadFile("groupbee", "board", file);
-                entity.setOriginalFileName(originalFileName);
-                entity.setFile(fileName);
+                for (MultipartFile file : files) {
+                    String originalFileName = file.getOriginalFilename();
+                    String fileName = minioService.uploadFile("groupbee", "board", file);
+                    originalFileNames.add(originalFileName);
+                    fileNames.add(fileName);
+                }
+
+                entity.setOriginalFileNames(originalFileNames);
+                entity.setFiles(fileNames);
             } else {
                 // 파일 변경이 없으면 기존 파일 정보 유지
-                entity.setFile(boardEntity.getFile());
-                entity.setOriginalFileName(boardEntity.getOriginalFileName());
+                entity.setFiles(boardEntity.getFiles());
+                entity.setOriginalFileNames(boardEntity.getOriginalFileNames());
             }
+
             // 업데이트 시간 설정
             entity.setUpdateDate(LocalDateTime.now());
             entity.setTitle(entity.getTitle() != null ? entity.getTitle() : boardEntity.getTitle());
@@ -163,19 +165,30 @@ public class BoardService {
         }
     }
 
-
-    //글 삭제
+    // 글 삭제
     public boolean deleteById(Long id) {
         Optional<BoardEntity> entity = boardDao.findById(id);
         if (entity.isPresent()) {
             BoardEntity boardEntity = entity.get();
-            if (boardEntity.getFile() != null) {
-                minioService.deleteFile("groupbee", "board", boardEntity.getFile());
+            if (boardEntity.getFiles() != null) {
+                for (String fileName : boardEntity.getFiles()) {
+                    minioService.deleteFile("groupbee", "board", fileName);
+                }
             }
             boardDao.deleteById(id);
             return true;
         } else {
             return false;
+        }
+    }
+    // 전체 게시물 조회 - 댓글 수 포함
+    public ResponseEntity<List<BoardDto>> findBoardByIdWithCommentCount() {
+        try {
+            List<BoardDto> boardList = boardDao.findAllByIdWithCommentCount();
+            return ResponseEntity.ok(boardList);
+        } catch (Exception e) {
+            System.out.println("Exception: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 }

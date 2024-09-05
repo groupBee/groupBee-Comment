@@ -3,7 +3,6 @@ package groupbee.comment.dto;
 import groupbee.comment.entity.BoardEntity;
 import lombok.*;
 
-import java.time.LocalDateTime;
 
 @Getter
 @Setter
@@ -14,4 +13,5 @@ import java.time.LocalDateTime;
 public class BoardDto {
     private BoardEntity board;
     private Long commentCount;
+
 }
