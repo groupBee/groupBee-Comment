@@ -42,16 +42,18 @@ public class BoardEntity {
     @Column(name = "content", nullable = false, length = Integer.MAX_VALUE)
     private String content;
 
-    @Size(max = 255)
-    @Column(name = "file")
-    private String file;
+    @ElementCollection
+    @CollectionTable(name = "board_files", joinColumns = @JoinColumn(name = "board_id"))
+    @Column(name = "file_name")
+    private List<String> files = new ArrayList<>();
+
+    @ElementCollection
+    @CollectionTable(name = "board_original_files", joinColumns = @JoinColumn(name = "board_id"))
+    @Column(name = "original_file_name")
+    private List<String> originalFileNames = new ArrayList<>();
 
     @Column(name = "member_id", nullable = false)
     private String memberId;
-
-    @Size(max = 255)
-    @Column(name = "original_file_name")
-    private String originalFileName;
 
     @Size(max = 255)
     @NotNull

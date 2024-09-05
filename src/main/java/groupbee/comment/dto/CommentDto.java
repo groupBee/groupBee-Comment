@@ -3,6 +3,7 @@ package groupbee.comment.dto;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 @Setter
@@ -18,4 +19,5 @@ public class CommentDto {
     private String memberId;
     private Long boardId;
     private String writer;
+
 }
