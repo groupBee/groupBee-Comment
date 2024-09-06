@@ -26,19 +26,25 @@ public class CommentService {
     private final BoardRepository boardRepository;
 
     public void save(CommentDto commentDto){
-      
-            CommentEntity commentEntity = new CommentEntity();
+        try {
+            BoardEntity boardEntity = boardRepository.findById(commentDto.getBoardId())
+                    .orElseThrow(() -> new RuntimeException("Board not found"));
 
+            CommentEntity commentEntity = new CommentEntity();
             Map<String, Object> response = feignClient.getUserInfo(); // feign 을 통해 UserInfo 가져오기
             commentEntity.setMemberId((String) response.get("potalId")); // UserInfo 에서 potalId 가져오기
             commentEntity.setWriter((String) response.get("name")); // UserInfo 에서 name 가져오기
+            commentEntity.setId(commentDto.getId());
+            if (commentDto.getCreateDate() != null) {
+                commentEntity.setCreateDate(commentDto.getCreateDate());
+            }
             commentEntity.setUpdateDate(LocalDateTime.now()); // 업데이트 시간 설정
             commentEntity.setContent(commentDto.getContent()); // 댓글 내용 설정
             commentEntity.setBoard(boardEntity); // 게시글 ID 설정
 
             commentDao.save(commentEntity);
             ResponseEntity.ok().build();
-        } catch (FeignException.BadRequest e) {catch (FeignException.BadRequest e) {
+        } catch (FeignException.BadRequest e) {
             // 400 Bad Request 발생 시 처리
             System.out.println("Bad Request: " + e.getMessage());
             ResponseEntity.badRequest().build();
